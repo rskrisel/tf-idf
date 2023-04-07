@@ -114,14 +114,14 @@ When you initialize TfidfVectorizer, you can choose to set it with different par
 
 The recommended way to run `TfidfVectorizer` is with smoothing (`smooth_idf = True`) and normalization (`norm='l2'`) turned on. These parameters will better account for differences in text length, and overall produce more meaningful tf–idf scores. Smoothing and L2 normalization are actually the default settings for `TfidfVectorizer`, so to turn them on, you don't need to include any extra code at all.
 
-Initialize TfidfVectorizer with desired parameters (default smoothing and normalization)
+Initialize TfidfVectorizer with the following parameters: input = 'filename' because we are iterating across a list of files, and stop_words='english' to apply the english language list of stop words
 
 
 ```python
 tfidf_vectorizer = TfidfVectorizer(input='filename', stop_words='english')
 ```
 
-Run TfidfVectorizer on our `text_files`
+Run TfidfVectorizer on our `text_files` and apply the fit_transform function to convert the data into a matrix format necessary to perform the tf-idf calculations
 
 
 ```python
@@ -133,20 +133,21 @@ tfidf_vector = tfidf_vectorizer.fit_transform(text_files)
 type(tfidf_vector)
 ```
 
-Make a DataFrame out of the resulting tf–idf vector, setting the "feature names" or words as columns and the titles as rows
+Make a DataFrame out of the resulting tf–idf vector, applying the `toarray()` function to transform the matrix into a format that can become a dataframe, setting the index equal to the list of titles, and the columns equal "feature names" or words as columns using the `tfidf_vectorizer.get_feature_names_out()` function
 
 
 ```python
 tfidf_df = pd.DataFrame(tfidf_vector.toarray(), index=text_titles, columns=tfidf_vectorizer.get_feature_names_out())
 ```
 
-Add column for document frequency aka number of times word appears in all documents
+Add column for document frequency to note the number of times word appears in all documents
 
 
 ```python
 tfidf_df.loc['00_Document Frequency'] = (tfidf_df > 0).sum()
 ```
 
+create a slice of the dataframe to target specific words that are of interest. Then sort the sliced dataframe by the index and round the decimals to two
 
 ```python
 tfidf_slice = tfidf_df[['government', 'borders', 'people', 'obama', 'war', 'honor','foreign', 'men', 'women', 'children']]
@@ -160,7 +161,7 @@ Let's drop "OO_Document Frequency" since we were just using it for illustration 
 tfidf_df = tfidf_df.drop('00_Document Frequency', errors='ignore')
 ```
 
-Let's reorganize the DataFrame so that the words are in rows rather than columns.
+Use the stack function to reorganize the DataFrame so that the words are in rows rather than columns. We need to reset the index to make sure the results became a dataframe and not a series object
 
 
 ```python
@@ -172,6 +173,7 @@ tfidf_df.stack().reset_index()
 tfidf_df = tfidf_df.stack().reset_index()
 ```
 
+Rename our columns
 
 ```python
 tfidf_df = tfidf_df.rename(columns={0:'tfidf', 'level_0': 'document','level_1': 'term'})
